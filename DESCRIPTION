@@ -9,3 +9,4 @@ License: BSD
 LazyData: true
 Maintainer: 'Mark M. Fredrickson <mark.m.fredrickson@gmail.com>'
 Suggests: testthat
+Imports: SparseM

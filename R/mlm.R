@@ -1,28 +1,16 @@
 #' Matched set based treatment effects.
 #'
-#' .. content for \description{} (no empty lines) ..
+#' Fits a regression model for matched data. Currently only linear
+#' regression via `lm` is implemented.
 #'
-#' .. content for \details{} ..
-#' - Build the model frame as in `lm`, except use `na.pass`
-#' - Look for a column inheriting from class `optmatch`.  (If there are none, or two or more, then bail.)
-#' - use `model.response`, `model.offset` (if applicable), `model.weights` (if applicable) to assemble corresponding vectors
-#' - Strip the optmatch variable from the provided formula and push reduced formula, model frame through `fill.NAs` (for now)
-#' - Remove from resulting model frame rows that have NAs on either the response or the optmatch or the offset.
-#' - Remove corresponding entries from the optmatch, the response and (if applicable) the offset and the weights
-#' - Coerce the optmatch to a matrix.csr
-#' - Build model matrix, then use matrix.csr version of the optmatch to linearly transform into matched differences model matrix, `x`
-#' - Also build vectors `y` of matched diffs on response, `offset` of matched diffs in offset
-#' - build vectors of n.tx, n.ctl.  If weights provided, these are sums of weights.
-#' - Strip out rows/entries for which n.tx=0 or n.ctl=0
-#' - Look in x for a column of 1's, other than "(Intercept)".  If found, remove "(Intercept)" column.  If not found, relabel "(Intercept)" as "z"
-#' - fitweights = ms.weights(n.tx, n.ctl)  If any of fitweights are NA, bail.  
-#' - If fit.type="lm", then do and return wlm.fit(x, y, w=fitweights, offset=offset)
-#' - If/when we enable fit.type="robust", call rlm on x, y, w, offset
-#' The matched differences model matrix has a col for each covariate but w/
-#' one row for each matched set.  Entries in this row are per matched set differences of means between treatment and control groups, with the treatment group being identified by the `contrast.group` attribute of the optmatch object.  
+#' The data will be collapsed from individuals units to matched set
+#' units. Weighting defined by the size of each matched set (so
+#' weights are constant in pair-matching) is calculated as well. The
+#' returned object is of class `lm` and should support all relevant
+#' follow-up analysis.
 #'
 #' @title Ordinary least squares for matched differences
-#' @param formula The right hand side should contain an `optmatch` object. 
+#' @param formula The right hand side should contain an `optmatch` object.
 #' @param data Data that contains the variables in `formula`, missing data will be imputed using `fill.NAs`
 #' @param ms.weights Function of 2 vector args `n.t`, `n.c`, sums of weights from treatment and control group members by matched set, returning vector of matched-set specific weights. `harmonic` returns harmonic means of n.t and n.c; `ett` simply returns n.t.
 #' @param fit.type character string indicating type of fit. For now, only "lm", but may expand to include rlm
@@ -69,10 +57,10 @@ mlm_helper <- function(formula, data, na.action = na.pass, contrasts.arg = NULL,
   outcome <- model.response(parsed$mf, "numeric")
   weights <- model.weights(parsed$mf)
   offset <- model.offset(parsed$mf)
-  
+
   # this will be a nearly filled in model matrix (ie. all factors expanded), but without an intercept
   noNAs <- fill.NAs(parsed$fmla, parsed$mf, contrasts.arg = contrasts.arg)
-  
+
   theMatch <- parsed$match
 
   checkNA <- function(i) {
@@ -84,7 +72,7 @@ mlm_helper <- function(formula, data, na.action = na.pass, contrasts.arg = NULL,
 
   remove <- !with(parsed,
                   checkNA(weights) |
-                  is.na(outcome) |  
+                  is.na(outcome) |
                   is.na(theMatch))
 
   noNAs <- noNAs[remove, , drop = FALSE]
@@ -104,7 +92,7 @@ mlm_helper <- function(formula, data, na.action = na.pass, contrasts.arg = NULL,
   nt <- sapply(levels(theMatch), function(l) { sum(theMatch == l & z) })
   nc <- sapply(levels(theMatch), function(l) { sum(theMatch == l & !z) })
 
-  missingTorC <- nt == 0 | nc == 0 
+  missingTorC <- nt == 0 | nc == 0
   nt <- nt[!missingTorC]
   nc <- nc[!missingTorC]
 
@@ -117,7 +105,7 @@ mlm_helper <- function(formula, data, na.action = na.pass, contrasts.arg = NULL,
   } else {
     # make the design matrix for the matched sets
     # switching back to dense representation since the we don't expect many zero's in the design matrix
-    X <- as.matrix(matchCsr %*% as.matrix(noNAs)) 
+    X <- as.matrix(matchCsr %*% as.matrix(noNAs))
     colnames(X) <- colnames(noNAs)
     # the rows are the matched sets (but we don't need to include those)
 
@@ -126,7 +114,7 @@ mlm_helper <- function(formula, data, na.action = na.pass, contrasts.arg = NULL,
     }
   }
 
-  Y <- matchCsr %*% outcome 
+  Y <- matchCsr %*% outcome
 
   return(list(X = X, Y = Y, nt = nt, nc = nc, noNAs = noNAs, weights = weights, offset = offset, parsed = parsed, matchCsr = matchCsr))
 }
@@ -137,7 +125,7 @@ setOldClass(c("optmatch", "factor"))
 ## Sparse matrices with which to assemble treatment minus control differences by matched set
 ##
 ## .. content for \details{} ..
-## @param from An optmatch object 
+## @param from An optmatch object
 ## @return A matrix.csr object by which to left-multiply vectors
 ## and model matrices in order to assemble matched differences.
 ## @author Ben B Hansen
@@ -155,7 +143,7 @@ setAs("optmatch", "matrix.csr", function(from) {
   rowstarts <- 1 + c(0, cumsum(sapply(pos.tc, length)))
   rowstarts <- as.integer(rowstarts)
 
-  # each row has 1st tx and then ctl, but we need to know how many of each      
+  # each row has 1st tx and then ctl, but we need to know how many of each
   n.t <- as.integer(table(from[zz, drop = FALSE]))
   n.c <- as.integer(table(from))-n.t
 
@@ -202,7 +190,7 @@ parseMatchingProblem <- function(formula, data, na.action = na.pass, ...) {
 
   # now make a new model frame, using the reduce form of the formula
   mf <- model.frame(newf, data, na.action = na.action, ...)
-  
+
   return(
       list(
           fmla = newf,

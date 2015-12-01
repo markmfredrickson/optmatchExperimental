@@ -362,9 +362,9 @@ estimators to properly compute them. Sandwich-style estimates of
 standard errors are more robust to model misspecification, but are
 less efficient than traditional standard error estimates.
 
-```{r,eval=FALSE}
-install.packages(sandwich)
-```
+(The `sandwich` package should be installed on R by default, if it
+appears to not be, you may need to install it using
+`install.packages(sandwich)`.)
 
 ```{r}
 library(sandwich)

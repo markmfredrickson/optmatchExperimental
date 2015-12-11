@@ -15,12 +15,14 @@
 #' @param ms.weights Function of 2 vector args `n.t`, `n.c`, sums of weights from treatment and control group members by matched set, returning vector of matched-set specific weights. `harmonic` returns harmonic means of n.t and n.c; `ett` simply returns n.t.
 #' @param fit.type character string indicating type of fit. For now, only "lm", but may expand to include rlm
 #' @param fit.control optional list of additional arguments to the fitter
+#' @param na.action How NA's are treated. See `model.frame` for details.
 #' @param contrasts.arg An optional list of contrast matrices that will be passed to \code{\link{model.matrix}}.
 #' @param ... additional arguments passed to `model.frame`
 #' @return object of class `lm`
 #' @export
 #' @author Ben B. Hansen, Mark M. Fredrickson
 #' @import SparseM
+#' @importFrom MASS rlm
 mlm <- function(formula, data, ms.weights = ett, fit.type = "lm", fit.control = list(), na.action = na.pass, contrasts.arg = NULL, ...) {
 
   cl <- match.call()
@@ -30,11 +32,7 @@ mlm <- function(formula, data, ms.weights = ett, fit.type = "lm", fit.control = 
   fit.weights <- ms.weights(helper$nt, helper$nc)
 
   if ((fit.type == "robust" || fit.type == "rlm")) {
-    if(require(MASS)) {
-      return(do.call(rlm, append(list(helper$X, helper$Y, weights = fit.weights), fit.control)))
-    } else {
-      warning("MASS package not found, cannot use robust regression fit.") # this should probably never happen. MASS in in base now.
-    }
+    return(do.call(MASS::rlm, append(list(helper$X, helper$Y, weights = fit.weights), fit.control)))
   }
 
   # can't fit with rlm package. fall back to good old lm
@@ -51,6 +49,14 @@ mlm <- function(formula, data, ms.weights = ett, fit.type = "lm", fit.control = 
 
 # Not exported. Just to avoid duplication between `mlm`, and `model.matrix`.
 # See mlm for the arguments
+##' Internal function for mlm. See `mlm` for details.
+##'
+##' @param formula See `mlm`.
+##' @param data See `mlm`.
+##' @param na.action See `mlm`.
+##' @param contrasts.arg See `mlm`.
+##' @param ... See `mlm`.
+##' @return See `mlm`.
 mlm_helper <- function(formula, data, na.action = na.pass, contrasts.arg = NULL, ...) {
 
   parsed <- parseMatchingProblem(formula, data, na.action, ...)
@@ -122,14 +128,16 @@ mlm_helper <- function(formula, data, na.action = na.pass, contrasts.arg = NULL,
 setOldClass(c("optmatch", "factor"))
 
 # ROxygen doesn't like this block, so turning it off for now.
-## Sparse matrices with which to assemble treatment minus control differences by matched set
-##
-## .. content for \details{} ..
-## @param from An optmatch object
-## @return A matrix.csr object by which to left-multiply vectors
-## and model matrices in order to assemble matched differences.
-## @author Ben B Hansen
-## @import SparseM, optmatch
+
+##' Sparse matrices with which to assemble treatment minus control differences by matched set
+##'
+##' @name as
+##' @family optmatch
+##' @param from An optmatch object
+##' @return A matrix.csr object by which to left-multiply vectors
+##' and model matrices in order to assemble matched differences.
+##' @author Ben B Hansen
+##' @import SparseM optmatch
 setAs("optmatch", "matrix.csr", function(from) {
   # treatment variable, a logical
   zz <- optmatch:::toZ(attr(from, "contrast.group")) # can remove the explicit namespace when this goes in the optmatch pkg
@@ -170,6 +178,7 @@ harmonic <-  function (n.t, n.c) 2*(1/n.t + 1/n.c)^-1
 #'
 #' @param formula The formula.
 #' @param data The data.frame containing terms in the formula.
+#' @param na.action How NA's are treated. See `model.frame` for details.
 #' @param ... Other arguments passed to `model.frame`.
 #' @return A list with: `mf` a model frame stripped of the optmatch argument, `match` the matched factor, `oname` the name of the outcome variable, `fmla` an updated formula without the matching vector
 parseMatchingProblem <- function(formula, data, na.action = na.pass, ...) {

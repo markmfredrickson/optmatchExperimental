@@ -1,7 +1,7 @@
 Package: optmatchExperimental
 Title: Optmatch Experimental Functions
 Version: 0.0.0.1
-Authors: 'Mark M. Fredrickson <mark.m.fredrickson@gmail.com>'
+Author: 'Mark M. Fredrickson <mark.m.fredrickson@gmail.com>'
 Description: Experimental functions for the optmatch package.
 Depends: R (>= 3.1.3),
     optmatch

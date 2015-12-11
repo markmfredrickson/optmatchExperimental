@@ -1,3 +1,5 @@
+Makefile
+load.R
 ^.*\.Rproj$
 ^\.Rproj\.user$
 .libraries

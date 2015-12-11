@@ -8,7 +8,7 @@ Depends:
     methods
 License: file LICENSE
 LazyData: true
-Maintainer: Josh Errickson <josh@errickson.net>
+Maintainer: Mark M. Fredrickson <mark.m.fredrickson@gmail.com>
 Imports:
     optmatch,
     SparseM,

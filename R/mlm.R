@@ -195,7 +195,7 @@ parseMatchingProblem <- function(formula, data, na.action = na.pass, ...) {
 
   mname <- colnames(mf)[isMatch]
 
-  newf <- update(formula, as.formula(paste(".~. -", mname)))
+  newf <- update(formula, as.formula(paste(".~. -", mname)), data=mf)
 
   # now make a new model frame, using the reduce form of the formula
   mf <- model.frame(newf, data, na.action = na.action, ...)

@@ -145,14 +145,16 @@ setAs("optmatch", "matrix.csr", function(from) {
   # treatment variable, a logical
   zz <- optmatch:::toZ(attr(from, "contrast.group")) # can remove the explicit namespace when this goes in the optmatch pkg
 
-  # list of positions of treatment member(s), then
-  # control group members; by matched set
-  pos.tc <- lapply( levels(from), function(lev) c(which(from==lev & zz),
-                                                  which(from==lev & !zz)))
+  # vector of positions of treatment member(s), then
+  # control group members
+  pos.tc <- order(from, !zz)
 
+  fromNum <- as.numeric(from)
+  fromNoNA <- fromNum[!is.na(from)]
   # starting positions for rows of the csr matrix
-  rowstarts <- 1 + c(0, cumsum(sapply(pos.tc, length)))
-  rowstarts <- as.integer(rowstarts)
+  rowstarts <- as.integer(c(rep(1, min(fromNoNA)),
+                             which(diff(fromNum[pos.tc])==1)+1,
+                             length(fromNoNA)+1))
 
   # each row has 1st tx and then ctl, but we need to know how many of each
   n.t <- as.integer(table(from[zz, drop = FALSE]))
@@ -169,7 +171,7 @@ setAs("optmatch", "matrix.csr", function(from) {
 
   new("matrix.csr",
       ra = multipliers,
-      ja = unlist(pos.tc),
+      ja = pos.tc[1:length(fromNoNA)],
       ia = rowstarts,
       dimension = c(nlevels(from), length(from)))
 })

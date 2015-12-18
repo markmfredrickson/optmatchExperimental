@@ -98,8 +98,9 @@ mlm_helper <- function(formula, data, na.action = na.pass, contrasts.arg = NULL,
 
   # Faster than original sapply; + 0 is to drop the intercept and
   # ensure all indicators are generated.
-  nt <- as.vector(z%*%model.matrix(~ theMatch + 0))
-  nc <- as.vector((!z)%*%model.matrix(~ theMatch + 0))
+  sparseMM <- SparseMMFromFactor(theMatch)
+  nt <- as.vector(as.matrix(t(as.matrix.csr(z))%*%sparseMM))
+  nc <- as.vector(as.matrix(t(as.matrix.csr(!z))%*%sparseMM))
 
   missingTorC <- nt == 0 | nc == 0
   nt <- nt[!missingTorC]

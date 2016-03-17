@@ -5,12 +5,12 @@ Author: 'Mark M. Fredrickson <mark.m.fredrickson@gmail.com>'
 Description: Experimental functions for the optmatch package.
 Depends:
     R (>= 3.1.3),
-    methods
+    optmatch
 License: file LICENSE
 LazyData: true
 Maintainer: Mark M. Fredrickson <mark.m.fredrickson@gmail.com>
 Imports:
-    optmatch,
+    methods,
     SparseM,
     MASS
 Suggests:

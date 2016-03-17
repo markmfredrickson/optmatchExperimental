@@ -3,6 +3,7 @@
 export(SparseMMFromFactor)
 export(matchability)
 export(mlm)
+exportMethods("[")
 import(SparseM)
 import(methods)
 import(optmatch)

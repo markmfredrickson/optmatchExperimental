@@ -29,3 +29,110 @@
 ##           }
 ##           )
 
+
+##' Given a distance matrix which has potentially been calipered,
+##' returns which observations are matchable and unmatchable
+##'
+##' @param object ISM, BISM or DenseMatrix
+##' @param ... Ignored.
+##' @return List of lists, $matchable$control, $matchable$treatment,
+##'   $unmatchable$control andd $unmatchable$treatment
+##' @export
+##' @name summary.ism
+summary.InfinitySparseMatrix <- function(object, ...) {
+  if (is(object, "BlockedInfinitySparseMatrix")) {
+    out <- lapply(levels(object@groups), function(x) summary(object[object@groups == x]))
+    class(out) <- "summary.BlockedInfinitySparseMatrix"
+    return(out)
+  }
+
+  out <- list()
+  d <- dim(object)
+
+  # Size of treatment and control groups
+  out$total$treatment <- d[1]
+  out$total$control <- d[2]
+
+  # Count of eligble and ineligible pairs.
+  num_elig <- num_eligible_matches(object)[[1]]
+  num_inelig <- prod(d) - num_elig
+  out$total$matchable <- num_elig
+  out$total$unmatchable <- num_inelig
+
+  finitedata <- is.finite(object@.Data)
+  matchabletreatment <- 1:d[1] %in% sort(unique(object@rows[finitedata]))
+  matchablecontrol   <- 1:d[2] %in% sort(unique(object@cols[finitedata]))
+  out$matchable$treatment <- object@rownames[matchabletreatment]
+  out$matchable$control <- object@colnames[matchablecontrol]
+  out$unmatchable$treatment <- object@rownames[!matchabletreatment]
+  out$unmatchable$control <- object@colnames[!matchablecontrol]
+
+  out$distances <- summary(object@.Data[finitedata])
+
+  #class(out) <- "summary.InfinitySparseMatrix"
+  out
+}
+
+##' @export
+##' @rdname summary.ism
+summary.DenseMatrix <- function(object, ...) {
+  out <- list()
+  d <- dim(object)
+
+  # Size of treatment and control groups
+  out$total$treatment <- d[1]
+  out$total$control <- d[2]
+
+  # Count of eligble and ineligible pairs.
+  num_elig <- num_eligible_matches(object)[[1]]
+  num_inelig <- prod(d) - num_elig
+  out$total$matchable <- num_elig
+  out$total$unmatchable <- num_inelig
+
+  matchabletreatment <- apply(object, 1, function(x) any(is.finite(x)))
+  matchablecontrol <- apply(object, 2, function(x) any(is.finite(x)))
+
+  out$matchable$treatment <- rownames(object)[matchabletreatment]
+  out$matchable$control <- colnames(object)[matchablecontrol]
+  out$unmatchable$treatment <- rownames(object)[!matchabletreatment]
+  out$unmatchable$control <- colnames(object)[!matchablecontrol]
+
+  out$distances <- summary(object)
+
+  class(out) <- "summary.DenseMatrix"
+  out
+}
+
+##' @export
+print.summary.InfinitySparseMatrix <- function(x, ...) {
+  ### NOT UPDATED
+  if (x$total$unmatchable == 0) {
+    cat(paste("All", sum(unlist(x$total)), "matches are eligible.\n"))
+  } else {
+    cat(paste("Out of", sum(unlist(x$total)),
+              "total potential eligible matches,", x$total$matchable,
+              "are eligible for matching and", x$total$unmatchable,
+              "matchings are prohibited.\n\n"))
+  }
+
+  if (x$total$unmatchable > 0) {
+    if (length(x$unmatchable$treatment) > 0) {
+      cat(paste("The following treatment group members are ineligible for any matches:\n"))
+      cat(paste(x$unmatchable$treatment, collapse=", "))
+      cat("\n\n")
+    }
+    if (length(x$unmatchable$control) > 0) {
+      cat(paste("The following control group members are ineligible for any matches:\n"))
+      cat(paste(x$unmatchable$control, collapse=", "))
+      cat("\n\n")
+    }
+  }
+}
+
+##' @export
+print.summary.DenseMatrix <- function(x, ...) {
+  ### NOT UPDATED
+  cat(paste0("All ", x$total, " potential matches (", x$dim[1],
+             " treatment members and ", x$dim[2],
+             " control members) are eligible.\n"))
+}

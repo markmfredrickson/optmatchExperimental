@@ -65,6 +65,25 @@ test_that("summary for ISM", {
 
 })
 
+test_that("summary for BlockedISM", {
+  set.seed(1)
+  d <- data.frame(z=rep(0:1, each=5),
+                  x=rnorm(10),
+                  q=rep(c("a", "d"), times=5))
+  rownames(d) <- letters[1:10]
+  m1 <- match_on(z ~ x + strata(q), data=d, caliper=1)
+  sm1 <- summary(m1)
+
+  expect_true(is(sm1, "summary.BlockedInfinitySparseMatrix"))
+  expect_true(is.list(sm1))
+  expect_equal(length(sm1), 2)
+  expect_equal(names(sm1), c("a", "d"))
+  expect_true(is(sm1[["a"]], "summary.InfinitySparseMatrix"))
+  expect_true(is(sm1[["d"]], "summary.InfinitySparseMatrix"))
+
+})
+
+
 test_that("summary for DenseMatrix", {
   set.seed(1)
   d <- data.frame(z=rep(0:1, each=5),

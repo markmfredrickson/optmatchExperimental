@@ -41,7 +41,14 @@
 ##' @name summary.ism
 summary.InfinitySparseMatrix <- function(object, ...) {
   if (is(object, "BlockedInfinitySparseMatrix")) {
-    out <- lapply(levels(object@groups), function(x) summary(object[object@groups == x]))
+    out <- lapply(levels(object@groups),
+                  function(x) {
+                    ism <- subset(object,
+                                  subset=object@rownames %in% names(object@groups[object@groups == x]),
+                                  select=object@colnames %in% names(object@groups[object@groups == x]))
+                    summary(ism)
+                  })
+    names(out) <- levels(object@groups)
     class(out) <- "summary.BlockedInfinitySparseMatrix"
     return(out)
   }

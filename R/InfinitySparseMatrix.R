@@ -55,7 +55,7 @@ summary.InfinitySparseMatrix <- function(object, ...) {
 
   finitedata <- is.finite(object@.Data)
   mtreat <- 1:dim(object)[1] %in% sort(unique(object@rows[finitedata]))
-  mcontrol   <- 1:dim(object)[2] %in% sort(unique(object@cols[finitedata]))
+  mcontrol  <- 1:dim(object)[2] %in% sort(unique(object@cols[finitedata]))
   distances <- summary(object@.Data[finitedata])
 
   out <- internal.summary.helper(object, mtreat, mcontrol, distances)
@@ -89,10 +89,8 @@ internal.summary.helper <- function(x,
   out$total$control <- d[2]
 
   # Count of eligble and ineligible pairs.
-  num_elig <- num_eligible_matches(x)[[1]]
-  num_inelig <- prod(d) - num_elig
-  out$total$matchable <- num_elig
-  out$total$unmatchable <- num_inelig
+  out$total$matchable <- num_eligible_matches(x)[[1]]
+  out$total$unmatchable <- prod(d) - out$total$matchable
 
   out$matchable$treatment <- rownames(x)[matchabletxt]
   out$matchable$control <- colnames(x)[matchablectl]

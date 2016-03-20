@@ -46,61 +46,54 @@ summary.InfinitySparseMatrix <- function(object, ...) {
     return(out)
   }
 
-  out <- list()
-  d <- dim(object)
-
-  # Size of treatment and control groups
-  out$total$treatment <- d[1]
-  out$total$control <- d[2]
-
-  # Count of eligble and ineligible pairs.
-  num_elig <- num_eligible_matches(object)[[1]]
-  num_inelig <- prod(d) - num_elig
-  out$total$matchable <- num_elig
-  out$total$unmatchable <- num_inelig
-
   finitedata <- is.finite(object@.Data)
-  matchabletreatment <- 1:d[1] %in% sort(unique(object@rows[finitedata]))
-  matchablecontrol   <- 1:d[2] %in% sort(unique(object@cols[finitedata]))
-  out$matchable$treatment <- object@rownames[matchabletreatment]
-  out$matchable$control <- object@colnames[matchablecontrol]
-  out$unmatchable$treatment <- object@rownames[!matchabletreatment]
-  out$unmatchable$control <- object@colnames[!matchablecontrol]
+  mtreat <- 1:dim(object)[1] %in% sort(unique(object@rows[finitedata]))
+  mcontrol   <- 1:dim(object)[2] %in% sort(unique(object@cols[finitedata]))
+  distances <- summary(object@.Data[finitedata])
 
-  out$distances <- summary(object@.Data[finitedata])
+  out <- internal.summary.helper(object, mtreat, mcontrol, distances)
 
-  #class(out) <- "summary.InfinitySparseMatrix"
+  class(out) <- "summary.InfinitySparseMatrix"
   out
 }
 
 ##' @export
 ##' @rdname summary.ism
 summary.DenseMatrix <- function(object, ...) {
+  mtreat <- apply(object, 1, function(x) any(is.finite(x)))
+  mcontrol <- apply(object, 2, function(x) any(is.finite(x)))
+  distances <- summary(as.vector(object))
+
+  out <- internal.summary.helper(object, mtreat, mcontrol, distances)
+
+  class(out) <- "summary.DenseMatrix"
+  out
+}
+
+internal.summary.helper <- function(x,
+                                    matchabletxt,
+                                    matchablectl,
+                                    distances) {
   out <- list()
-  d <- dim(object)
+  d <- dim(x)
 
   # Size of treatment and control groups
   out$total$treatment <- d[1]
   out$total$control <- d[2]
 
   # Count of eligble and ineligible pairs.
-  num_elig <- num_eligible_matches(object)[[1]]
+  num_elig <- num_eligible_matches(x)[[1]]
   num_inelig <- prod(d) - num_elig
   out$total$matchable <- num_elig
   out$total$unmatchable <- num_inelig
 
-  matchabletreatment <- apply(object, 1, function(x) any(is.finite(x)))
-  matchablecontrol <- apply(object, 2, function(x) any(is.finite(x)))
+  out$matchable$treatment <- rownames(x)[matchabletxt]
+  out$matchable$control <- colnames(x)[matchablectl]
+  out$unmatchable$treatment <- rownames(x)[!matchabletxt]
+  out$unmatchable$control <- colnames(x)[!matchablectl]
 
-  out$matchable$treatment <- rownames(object)[matchabletreatment]
-  out$matchable$control <- colnames(object)[matchablecontrol]
-  out$unmatchable$treatment <- rownames(object)[!matchabletreatment]
-  out$unmatchable$control <- colnames(object)[!matchablecontrol]
-
-  out$distances <- summary(object)
-
-  class(out) <- "summary.DenseMatrix"
-  out
+  out$distances <- distances
+  return(out)
 }
 
 ##' @export

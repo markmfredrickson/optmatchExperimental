@@ -44,7 +44,9 @@ summary.InfinitySparseMatrix <- function(object, ...) {
   finitedata <- is.finite(object@.Data)
   mtreat <- 1:dim(object)[1] %in% sort(unique(object@rows[finitedata]))
   mcontrol  <- 1:dim(object)[2] %in% sort(unique(object@cols[finitedata]))
-  distances <- summary(object@.Data[finitedata])
+  distances <- summary(tapply(object@.Data[finitedata],
+                              object@rows[finitedata],
+                              min))
 
   out <- internal.summary.helper(object, mtreat, mcontrol, distances)
   out$matname <- deparse(substitute(object))
@@ -83,7 +85,7 @@ summary.BlockedInfinitySparseMatrix <- function(object, ...) {
 summary.DenseMatrix <- function(object, ...) {
   mtreat <- apply(object, 1, function(x) any(is.finite(x)))
   mcontrol <- apply(object, 2, function(x) any(is.finite(x)))
-  distances <- summary(as.vector(object))
+  distances <- summary(apply(object, 1, min))
 
   out <- internal.summary.helper(object, mtreat, mcontrol, distances)
 
@@ -166,7 +168,7 @@ print.summary.InfinitySparseMatrix <- function(x, ...) {
   }
 
   if (any(!is.na(x$distances))) {
-    cat("Summary of distances:\n")
+    cat("Summary of minimum matchable distance per treatment member:\n")
     print(x$distances, ...)
     cat("\n")
   }

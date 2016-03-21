@@ -62,7 +62,6 @@ test_that("summary for ISM", {
   expect_equal(sm4$matchable$treatment, character(0))
   expect_equal(sm4$matchable$control, character(0))
 
-
 })
 
 test_that("summary for BlockedISM", {

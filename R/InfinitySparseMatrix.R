@@ -117,7 +117,21 @@ internal.summary.helper <- function(x,
   return(out)
 }
 
+##' Print method for InfinitySparseMatrix, BlockedInfinitySparseMatrix
+##' and DenseMatrix
+##'
+##' @param x Output from a summary call of an InfinitySparseMatrix,
+##'   BlockedInfinitySparseMatrix or DenseMatrix (of class
+##'   summary.infinitysparsematrix,
+##'   summary.blockedinfinitysparsematrix or summary.densematrix
+##'   respectively).
+##' @param printAllBlocks If `x` is a BlockedInfinitySparseMatrix,
+##'   should summaries of all blocks be printed alongside the overall
+##'   summary?
+##' @param ... Additional arguments passed to `print` calls.
+##' @return `x`
 ##' @export
+##' @name print.summary.ism
 print.summary.InfinitySparseMatrix <- function(x, ...) {
   cat(paste("Membership:", x$total$treatment, "treatment,",
             x$total$control, "control\n"))
@@ -150,13 +164,14 @@ print.summary.InfinitySparseMatrix <- function(x, ...) {
 
   if (any(!is.na(x$distances))) {
     cat("Summary of distances:\n")
-    print(x$distances)
+    print(x$distances, ...)
     cat("\n")
   }
-
+  return(x)
 }
 
 ##' @export
+##' @rdname print.summary.ism
 print.summary.BlockedInfinitySparseMatrix <- function(x, ..., printAllBlocks=FALSE) {
 
   cat("Summary across all blocks:\n")
@@ -172,9 +187,12 @@ print.summary.BlockedInfinitySparseMatrix <- function(x, ..., printAllBlocks=FAL
   }
 
   cat("\n")
+  return(x)
 }
 
 ##' @export
+##' @rdname print.summary.ism
 print.summary.DenseMatrix <- function(x, ...) {
   print.summary.InfinitySparseMatrix(x, ...)
+  return(x)
 }

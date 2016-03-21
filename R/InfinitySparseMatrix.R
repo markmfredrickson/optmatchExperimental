@@ -105,7 +105,7 @@ internal.summary.helper <- function(x,
   out$total$control <- d[2]
 
   # Count of eligble and ineligible pairs.
-  out$total$matchable <- num_eligible_matches(x)[[1]]
+  out$total$matchable <- Reduce("+", num_eligible_matches(x))
   out$total$unmatchable <- prod(d) - out$total$matchable
 
   out$matchable$treatment <- rownames(x)[matchabletxt]

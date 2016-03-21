@@ -170,7 +170,7 @@ print.summary.InfinitySparseMatrix <- function(x, ...) {
     print(x$distances, ...)
     cat("\n")
   }
-  return(x)
+  return(invisible(x))
 }
 
 ##' @export
@@ -215,12 +215,12 @@ print.summary.BlockedInfinitySparseMatrix <- function(x, ...,
   }
 
   cat("\n")
-  return(x)
+  return(invisible(x))
 }
 
 ##' @export
 ##' @rdname print.summary.ism
 print.summary.DenseMatrix <- function(x, ...) {
   print.summary.InfinitySparseMatrix(x, ...)
-  return(x)
+  return(invisible(x))
 }

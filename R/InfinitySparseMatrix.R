@@ -40,18 +40,6 @@
 ##' @export
 ##' @name summary.ism
 summary.InfinitySparseMatrix <- function(object, ...) {
-  if (is(object, "BlockedInfinitySparseMatrix")) {
-    out <- lapply(levels(object@groups),
-                  function(x) {
-                    ism <- subset(object,
-                                  subset=object@rownames %in% names(object@groups[object@groups == x]),
-                                  select=object@colnames %in% names(object@groups[object@groups == x]))
-                    summary(ism)
-                  })
-    names(out) <- levels(object@groups)
-    class(out) <- "summary.BlockedInfinitySparseMatrix"
-    return(out)
-  }
 
   finitedata <- is.finite(object@.Data)
   mtreat <- 1:dim(object)[1] %in% sort(unique(object@rows[finitedata]))
@@ -59,9 +47,35 @@ summary.InfinitySparseMatrix <- function(object, ...) {
   distances <- summary(object@.Data[finitedata])
 
   out <- internal.summary.helper(object, mtreat, mcontrol, distances)
+  out$matname <- deparse(substitute(object))
 
   class(out) <- "summary.InfinitySparseMatrix"
   out
+}
+
+##' @export
+##' @rdname summary.ism
+summary.BlockedInfinitySparseMatrix <- function(object, ...) {
+  out <- lapply(levels(object@groups),
+                function(x) {
+                  ism <- subset(object,
+                                subset=object@rownames %in% names(object@groups[object@groups == x]),
+                                select=object@colnames %in% names(object@groups[object@groups == x]))
+                  s <- summary(ism)
+                  s$matname <- deparse(substitute(object))
+                  s$blockname <- x
+                  return(s)
+                })
+  names(out) <- levels(object@groups)
+
+  out$overall <- summary.InfinitySparseMatrix(object)
+
+  out$matname <- list(matname = deparse(substitute(object)),
+                       blocknames = levels(object@groups))
+  out$overall$matname <- out$matname$matname
+
+  class(out) <- "summary.BlockedInfinitySparseMatrix"
+  return(out)
 }
 
 ##' @export
@@ -72,6 +86,8 @@ summary.DenseMatrix <- function(object, ...) {
   distances <- summary(as.vector(object))
 
   out <- internal.summary.helper(object, mtreat, mcontrol, distances)
+
+  out$matname <- deparse(substitute(object))
 
   class(out) <- "summary.DenseMatrix"
   out
@@ -103,34 +119,62 @@ internal.summary.helper <- function(x,
 
 ##' @export
 print.summary.InfinitySparseMatrix <- function(x, ...) {
-  ### NOT UPDATED
-  if (x$total$unmatchable == 0) {
-    cat(paste("All", sum(unlist(x$total)), "matches are eligible.\n"))
-  } else {
-    cat(paste("Out of", sum(unlist(x$total)),
-              "total potential eligible matches,", x$total$matchable,
-              "are eligible for matching and", x$total$unmatchable,
-              "matchings are prohibited.\n\n"))
+  cat(paste("Membership:", x$total$treatment, "treatment,",
+            x$total$control, "control\n"))
+  cat(paste("Total eligible potential matches:", x$total$matchable,
+            "\n"))
+  cat(paste("Total eligible potential matches:", x$total$unmatchable,
+            "\n"))
+  cat("\n")
+
+  numunmatch <- sapply(x$unmatchable, length)
+  for (i in 1:2) {
+    if (numunmatch[i] > 0) {
+      cat(paste0(numunmatch[i], " unmatchable ", names(numunmatch)[i],
+                 " member", if(numunmatch[i] > 1) { "s" } , ":\n"))
+      cat("\t")
+      cat(paste(x$unmatchable[[i]][1:min(5, numunmatch[i])],
+                collapse=", "))
+      if (numunmatch[i] > 5) {
+        cat(", ...\n")
+
+        cat(paste0("See summary(", x$matname, ")",
+                   if (!is.null(x$blockname)) {
+                     paste0("$`", x$blockname, "`")
+                   }, "$unmatchable$",
+                   names(numunmatch)[i], " for a complete list."))
+        }
+      cat("\n\n")
+    }
   }
 
-  if (x$total$unmatchable > 0) {
-    if (length(x$unmatchable$treatment) > 0) {
-      cat(paste("The following treatment group members are ineligible for any matches:\n"))
-      cat(paste(x$unmatchable$treatment, collapse=", "))
-      cat("\n\n")
-    }
-    if (length(x$unmatchable$control) > 0) {
-      cat(paste("The following control group members are ineligible for any matches:\n"))
-      cat(paste(x$unmatchable$control, collapse=", "))
-      cat("\n\n")
-    }
+  if (any(!is.na(x$distances))) {
+    cat("Summary of distances:\n")
+    print(x$distances)
+    cat("\n")
   }
+
+}
+
+##' @export
+print.summary.BlockedInfinitySparseMatrix <- function(x, ..., printAllBlocks=FALSE) {
+
+  cat("Summary across all blocks:\n")
+  print(x$overall, ...)
+  if (!printAllBlocks) {
+    cat(paste0("To see summaries for individual blocks,",
+               " call for example summary(",
+               x$matname$matname, ")$`",
+               x$matname$blocknames[1], "`.\n"))
+  } else {
+    cat("Indiviual blocks:\n\n")
+    print(x[names(x) %in% x$matname$blocknames], ...)
+  }
+
+  cat("\n")
 }
 
 ##' @export
 print.summary.DenseMatrix <- function(x, ...) {
-  ### NOT UPDATED
-  cat(paste0("All ", x$total, " potential matches (", x$dim[1],
-             " treatment members and ", x$dim[2],
-             " control members) are eligible.\n"))
+  print.summary.InfinitySparseMatrix(x, ...)
 }

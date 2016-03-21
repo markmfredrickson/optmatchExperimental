@@ -140,3 +140,37 @@ test_that("summary for DenseMatrix", {
   expect_equal(sm2$unmatchable$control, character(0))
   expect_true(is(sm2$distances, "summaryDefault"))
 })
+
+test_that("distanceSummary suppresses distance", {
+  set.seed(1)
+  d <- data.frame(z=rep(0:1, each=5),
+                  x=rnorm(10),
+                  q=rep(c("a", "d"), times=5))
+  rownames(d) <- letters[1:10]
+  m1 <- match_on(z ~ x, data=d)
+
+  expect_true(!is.null(summary(m1)$distances))
+  expect_true(!is.null(summary(m1, distanceSummary=TRUE)$distances))
+  expect_true(is.null(summary(m1, distanceSummary=FALSE)$distances))
+
+  m2 <- match_on(z ~ x, data=d, caliper=1)
+  expect_true(!is.null(summary(m2)$distances))
+  expect_true(!is.null(summary(m2, distanceSummary=TRUE)$distances))
+  expect_true(is.null(summary(m2, distanceSummary=FALSE)$distances))
+
+  m3 <- match_on(z ~ x + strata(q), data=d, caliper=1)
+  sm3.1 <- summary(m3)
+  expect_true(!is.null(sm3.1$overall$distances))
+  expect_true(!is.null(sm3.1$a$distances))
+  expect_true(!is.null(sm3.1$d$distances))
+
+  sm3.2 <- summary(m3, distanceSummary=TRUE)
+  expect_true(!is.null(sm3.2$overall$distances))
+  expect_true(!is.null(sm3.2$a$distances))
+  expect_true(!is.null(sm3.2$d$distances))
+
+  sm3.3 <- summary(m3, distanceSummary=FALSE)
+  expect_true(is.null(sm3.3$overall$distances))
+  expect_true(is.null(sm3.3$a$distances))
+  expect_true(is.null(sm3.3$d$distances))
+})

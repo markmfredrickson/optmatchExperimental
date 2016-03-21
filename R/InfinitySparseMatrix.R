@@ -176,14 +176,26 @@ print.summary.BlockedInfinitySparseMatrix <- function(x, ..., printAllBlocks=FAL
 
   cat("Summary across all blocks:\n")
   print(x$overall, ...)
+  blockentries <- names(x) %in% x$matname$blocknames
+
   if (!printAllBlocks) {
+    cat("Block structure:\n")
+    blocksummary <- matrix(unlist(lapply(x[blockentries], "[", "total")),
+                           byrow=TRUE, ncol=4)
+    rownames(blocksummary) <- x$matname$blocknames
+    colnames(blocksummary) <- c("#Treatment", "#Control", "Matchable",
+                                "Unmatchable")
+    print(blocksummary)
+
+    cat("\n")
+
     cat(paste0("To see summaries for individual blocks,",
                " call for example summary(",
                x$matname$matname, ")$`",
                x$matname$blocknames[1], "`.\n"))
   } else {
     cat("Indiviual blocks:\n\n")
-    print(x[names(x) %in% x$matname$blocknames], ...)
+    print(x[blockentries], ...)
   }
 
   cat("\n")

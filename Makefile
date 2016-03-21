@@ -1,7 +1,8 @@
 # load.R fixes a bug with devtool's `help` to enable `help` on
 # functions in this package, as well as loading the package
 LOAD=R_PROFILE=load.R
-RCMD=R --vanilla -q -e
+RFRESH=R --no-init-file --no-environ --no-restore -q
+# --vanilla doesn't work with R_PROFILE (because of --no-site-info)
 
 interactive:
 	@$(LOAD) R -q --no-save
@@ -10,7 +11,7 @@ interactive-emacs:
 	@$(LOAD) emacs -nw -f R
 
 .devtools:
-	@$(RCMD) "library(devtools); devtools:::$(FUNC)()"
+	@$(LOAD) $(RFRESH) -e "library(devtools); devtools:::$(FUNC)()"
 
 dependencies: FUNC=install_deps
 test: FUNC=test

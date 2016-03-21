@@ -80,6 +80,18 @@ test_that("summary for BlockedISM", {
   expect_true(is(sm1[["a"]], "summary.InfinitySparseMatrix"))
   expect_true(is(sm1[["d"]], "summary.InfinitySparseMatrix"))
 
+  # The current version of optmatch on CRAN has a bug in
+  # num_eligible_matches. This isn't an issue in general, as using
+  # load.R allows using the most recent version on the
+  # repo. (E.g. works fine in `make interactive` and `make test`.)
+  # However, `make check` starts a fresh version of R which I can't
+  # figure out how to manipulate, so this will fail. So
+  if (compareVersion(as.character(packageVersion("optmatch")), "0.9-5") == 1) {
+    expect_true(all.equal(c(5,5,4,21),
+                          unlist(sm1$overall$total),
+                          check.attributes=FALSE))
+  }
+
   # Alternate ways of calling bloks
   suma1 <- sm1[['a']]
   suma2 <- sm1$`a`

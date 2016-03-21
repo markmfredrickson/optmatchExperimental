@@ -137,7 +137,7 @@ print.summary.InfinitySparseMatrix <- function(x, ...) {
             x$total$control, "control\n"))
   cat(paste("Total eligible potential matches:", x$total$matchable,
             "\n"))
-  cat(paste("Total eligible potential matches:", x$total$unmatchable,
+  cat(paste("Total ineligible potential matches:", x$total$unmatchable,
             "\n"))
   cat("\n")
 

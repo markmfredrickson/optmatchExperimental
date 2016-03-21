@@ -127,7 +127,10 @@ internal.summary.helper <- function(x,
 ##'   respectively).
 ##' @param printAllBlocks If `x` is a BlockedInfinitySparseMatrix,
 ##'   should summaries of all blocks be printed alongside the overall
-##'   summary?
+##'   summary? Default FALSE.
+##' @param blockStructure If `printAllBlocks` is false, print a quick
+##'   summary of each individual block. Default TRUE. If the number of
+##'   blocks is high, consider suppressing this.
 ##' @param ... Additional arguments passed to `print` calls.
 ##' @return `x`
 ##' @export
@@ -172,22 +175,32 @@ print.summary.InfinitySparseMatrix <- function(x, ...) {
 
 ##' @export
 ##' @rdname print.summary.ism
-print.summary.BlockedInfinitySparseMatrix <- function(x, ..., printAllBlocks=FALSE) {
+print.summary.BlockedInfinitySparseMatrix <- function(x, ...,
+               printAllBlocks=FALSE,
+               blockStructure=TRUE) {
 
   cat("Summary across all blocks:\n")
   print(x$overall, ...)
   blockentries <- names(x) %in% x$matname$blocknames
 
   if (!printAllBlocks) {
-    cat("Block structure:\n")
-    blocksummary <- matrix(unlist(lapply(x[blockentries], "[", "total")),
-                           byrow=TRUE, ncol=4)
-    rownames(blocksummary) <- x$matname$blocknames
-    colnames(blocksummary) <- c("#Treatment", "#Control", "Matchable",
-                                "Unmatchable")
-    print(blocksummary)
+    if (blockStructure) {
+      cat("Block structure:\n")
+      blocksummary <- matrix(unlist(lapply(x[blockentries], "[", "total")),
+                             byrow=TRUE, ncol=4)
+      blocksummary <- cbind(sapply(sapply(sapply(x[blockentries], "[", "matchable"), "[", "treatment"), length),
+                            sapply(sapply(sapply(x[blockentries], "[", "matchable"), "[", "control"), length),
+                            sapply(sapply(sapply(x[blockentries], "[", "unmatchable"), "[", "treatment"), length),
+                            sapply(sapply(sapply(x[blockentries], "[", "unmatchable"), "[", "control"), length))
+      rownames(blocksummary) <- paste0("`",x$matname$blocknames,"`")
+      colnames(blocksummary) <- c("Matchable Txt",
+                                  "Matchable Ctl",
+                                  "Unmatchable Txt",
+                                  "Unmatchable Ctl")
+      print(blocksummary)
 
-    cat("\n")
+      cat("\n")
+    }
 
     cat(paste0("To see summaries for individual blocks,",
                " call for example summary(",

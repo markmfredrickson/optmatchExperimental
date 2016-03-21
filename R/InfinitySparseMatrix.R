@@ -195,7 +195,10 @@ print.summary.BlockedInfinitySparseMatrix <- function(x, ..., printAllBlocks=FAL
                x$matname$blocknames[1], "`.\n"))
   } else {
     cat("Indiviual blocks:\n\n")
-    print(x[blockentries], ...)
+    for (i in x$matname$blocknames) {
+      cat(paste0("`",i,"`\n"))
+      print(x[[i]])
+    }
   }
 
   cat("\n")

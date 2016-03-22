@@ -64,6 +64,13 @@ test_that("summary for ISM", {
   expect_equal(sm4$matchable$control, character(0))
   expect_true(is.null(sm4$distances))
 
+  m5 <- m3
+  m5@.Data <- rep(Inf, length(m5))
+  sm5 <- summary(m5)
+  expect_equal(sm5$matchable$treatment, character(0))
+  expect_equal(sm5$matchable$control, character(0))
+  expect_true(is.null(sm5$distances))
+
 
 })
 

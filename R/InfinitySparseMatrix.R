@@ -38,6 +38,13 @@
 ##' @param distanceSummary Default TRUE. Should a summary of minimum
 ##'   distance per treatment member be calculated? May be slow on
 ##'   larger data sets.
+##' @param printAllBlocks If `object` is a
+##'   BlockedInfinitySparseMatrix, should summaries of all blocks be
+##'   printed alongside the overall summary? Default FALSE.
+##' @param blockStructure If `object` is a BlockedInfinitySparseMatrix
+##'   and `printAllBlocks` is false, print a quick summary of each
+##'   individual block. Default TRUE. If the number of blocks is high,
+##'   consider suppressing this.
 ##' @return List of lists, $matchable$control, $matchable$treatment,
 ##'   $unmatchable$control andd $unmatchable$treatment
 ##' @export
@@ -66,7 +73,9 @@ summary.InfinitySparseMatrix <- function(object, ..., distanceSummary=TRUE) {
 ##' @export
 ##' @rdname summary.ism
 summary.BlockedInfinitySparseMatrix <- function(object, ...,
-                                                distanceSummary=TRUE) {
+                                                distanceSummary=TRUE,
+                                                printAllBlocks=FALSE,
+                                                blockStructure=TRUE) {
   out <- lapply(levels(object@groups),
                 function(x) {
                   ism <- subset(object,
@@ -85,6 +94,9 @@ summary.BlockedInfinitySparseMatrix <- function(object, ...,
   out$matname <- list(matname = deparse(substitute(object)),
                        blocknames = levels(object@groups))
   out$overall$matname <- out$matname$matname
+
+  out$flags <- list(printAllBlocks=printAllBlocks,
+                    blockStructure=blockStructure)
 
   class(out) <- "summary.BlockedInfinitySparseMatrix"
   return(out)
@@ -141,12 +153,6 @@ internal.summary.helper <- function(x,
 ##'   summary.infinitysparsematrix,
 ##'   summary.blockedinfinitysparsematrix or summary.densematrix
 ##'   respectively).
-##' @param printAllBlocks If `x` is a BlockedInfinitySparseMatrix,
-##'   should summaries of all blocks be printed alongside the overall
-##'   summary? Default FALSE.
-##' @param blockStructure If `printAllBlocks` is false, print a quick
-##'   summary of each individual block. Default TRUE. If the number of
-##'   blocks is high, consider suppressing this.
 ##' @param ... Additional arguments passed to `print` calls.
 ##' @return `x`
 ##' @export
@@ -191,16 +197,14 @@ print.summary.InfinitySparseMatrix <- function(x, ...) {
 
 ##' @export
 ##' @rdname print.summary.ism
-print.summary.BlockedInfinitySparseMatrix <- function(x, ...,
-               printAllBlocks=FALSE,
-               blockStructure=TRUE) {
+print.summary.BlockedInfinitySparseMatrix <- function(x, ...) {
 
   cat("Summary across all blocks:\n")
   print(x$overall, ...)
   blockentries <- names(x) %in% x$matname$blocknames
 
-  if (!printAllBlocks) {
-    if (blockStructure) {
+  if (!x$flags$printAllBlocks) {
+    if (x$flags$blockStructure) {
       cat("Block structure:\n")
       blocksummary <- matrix(unlist(lapply(x[blockentries], "[", "total")),
                              byrow=TRUE, ncol=4)

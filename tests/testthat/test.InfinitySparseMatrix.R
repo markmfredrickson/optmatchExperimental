@@ -75,8 +75,8 @@ test_that("summary for BlockedISM", {
 
   expect_true(is(sm1, "summary.BlockedInfinitySparseMatrix"))
   expect_true(is.list(sm1))
-  expect_equal(length(sm1), 4)
-  expect_equal(names(sm1), c("a", "d", "overall", "matname"))
+  expect_equal(length(sm1), 5)
+  expect_equal(names(sm1), c("a", "d", "overall", "matname", "flags"))
   expect_true(is(sm1[["a"]], "summary.InfinitySparseMatrix"))
   expect_true(is(sm1[["d"]], "summary.InfinitySparseMatrix"))
 
@@ -92,7 +92,7 @@ test_that("summary for BlockedISM", {
                           check.attributes=FALSE))
   }
 
-  # Alternate ways of calling bloks
+  # Alternate ways of calling blocks
   suma1 <- sm1[['a']]
   suma2 <- sm1$`a`
   suma3 <- sm1[[1]]
@@ -102,6 +102,8 @@ test_that("summary for BlockedISM", {
 
   expect_true(sm1$`a`$blockname == "a")
   expect_true(sm1$`d`$blockname == "d")
+
+  expect_identical(sm1$flags, list(printAllBlocks=FALSE, blockStructure=TRUE))
 
 })
 

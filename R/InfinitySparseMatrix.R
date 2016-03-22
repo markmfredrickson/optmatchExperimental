@@ -76,13 +76,16 @@ summary.BlockedInfinitySparseMatrix <- function(object, ...,
                                                 distanceSummary=TRUE,
                                                 printAllBlocks=FALSE,
                                                 blockStructure=TRUE) {
+
+  ismname <- deparse(substitute(object))
+
   out <- lapply(levels(object@groups),
                 function(x) {
                   ism <- subset(object,
                                 subset=object@rownames %in% names(object@groups[object@groups == x]),
                                 select=object@colnames %in% names(object@groups[object@groups == x]))
                   s <- summary(ism, ..., distanceSummary=distanceSummary)
-                  attr(s, "ismname") <- deparse(substitute(object))
+                  attr(s, "ismname") <- ismname
                   attr(s, "blockname") <- x
                   return(s)
                 })
@@ -91,7 +94,7 @@ summary.BlockedInfinitySparseMatrix <- function(object, ...,
   out$overall <- summary.InfinitySparseMatrix(object, ...,
                                               distanceSummary=distanceSummary)
 
-  attr(out, "ismname") <- deparse(substitute(object))
+  attr(out, "ismname") <- ismname
   attr(out, "blocknames") <- levels(object@groups)
 
   attr(out$overall, "ismname") <- attr(out, "ismname")

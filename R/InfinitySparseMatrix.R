@@ -55,7 +55,7 @@ summary.InfinitySparseMatrix <- function(object, ..., distanceSummary=TRUE) {
   mtreat <- 1:dim(object)[1] %in% sort(unique(object@rows[finitedata]))
   mcontrol  <- 1:dim(object)[2] %in% sort(unique(object@cols[finitedata]))
 
-  if (distanceSummary) {
+  if (distanceSummary & length(object@.Data[finitedata])) {
     distances <- summary(tapply(object@.Data[finitedata],
                                 object@rows[finitedata],
                                 min))
@@ -111,7 +111,7 @@ summary.BlockedInfinitySparseMatrix <- function(object, ...,
 summary.DenseMatrix <- function(object, ..., distanceSummary=TRUE) {
   mtreat <- apply(object, 1, function(x) any(is.finite(x)))
   mcontrol <- apply(object, 2, function(x) any(is.finite(x)))
-  if (distanceSummary) {
+  if (distanceSummary & length(object@.Data[is.finite(object@.Data)])) {
     distances <- summary(apply(object, 1, min))
   } else {
     distances <- NULL

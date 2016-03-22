@@ -31,6 +31,7 @@ test_that("summary for ISM", {
   sm2 <- summary(m2)
   expect_true(is(sm2, "summary.InfinitySparseMatrix"))
   expect_true(is.list(sm2))
+  expect_equal(attr(sm2, "ismname"), "m2")
   expect_equal(sm2$total$treatment, 5)
   expect_equal(sm2$total$control, 5)
   expect_equal(sm2$total$matchable, 12)
@@ -75,10 +76,18 @@ test_that("summary for BlockedISM", {
 
   expect_true(is(sm1, "summary.BlockedInfinitySparseMatrix"))
   expect_true(is.list(sm1))
-  expect_equal(length(sm1), 5)
-  expect_equal(names(sm1), c("a", "d", "overall", "matname", "flags"))
+  expect_equal(length(sm1), 3)
+  expect_equal(names(sm1), c("a", "d", "overall"))
+  expect_equal(attr(sm1, "ismname"), "m1")
+  expect_equal(attr(sm1, "blocknames"), c("a", "d"))
+  expect_equal(attr(sm1, "printAllBlocks"), FALSE)
+  expect_equal(attr(sm1, "blockStructure"), TRUE)
   expect_true(is(sm1[["a"]], "summary.InfinitySparseMatrix"))
   expect_true(is(sm1[["d"]], "summary.InfinitySparseMatrix"))
+
+  sm2 <- summary(m1, printAllBlocks=TRUE, blockStructure=FALSE)
+  expect_equal(attr(sm2, "printAllBlocks"), TRUE)
+  expect_equal(attr(sm2, "blockStructure"), FALSE)
 
   # The current version of optmatch on CRAN has a bug in
   # num_eligible_matches. This isn't an issue in general, as using
@@ -100,10 +109,8 @@ test_that("summary for BlockedISM", {
   expect_identical(suma1, suma3)
 
 
-  expect_true(sm1$`a`$blockname == "a")
-  expect_true(sm1$`d`$blockname == "d")
-
-  expect_identical(sm1$flags, list(printAllBlocks=FALSE, blockStructure=TRUE))
+  expect_equal(attr(sm1$`a`, "blockname"), "a")
+  expect_equal(attr(sm1$`d`, "blockname"), "d")
 
 })
 
@@ -117,6 +124,7 @@ test_that("summary for DenseMatrix", {
   sm1 <- summary(m1)
   expect_true(is(sm1, "summary.DenseMatrix"))
   expect_true(is.list(sm1))
+  expect_equal(attr(sm1, "ismname"), "m1")
   expect_equal(sm1$total$treatment, 5)
   expect_equal(sm1$total$control, 5)
   expect_equal(sm1$total$matchable, 25)

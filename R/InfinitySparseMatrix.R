@@ -64,7 +64,7 @@ summary.InfinitySparseMatrix <- function(object, ..., distanceSummary=TRUE) {
   }
 
   out <- internal.summary.helper(object, mtreat, mcontrol, distances)
-  out$matname <- deparse(substitute(object))
+  attr(out, "ismname") <- deparse(substitute(object))
 
   class(out) <- "summary.InfinitySparseMatrix"
   out
@@ -82,8 +82,8 @@ summary.BlockedInfinitySparseMatrix <- function(object, ...,
                                 subset=object@rownames %in% names(object@groups[object@groups == x]),
                                 select=object@colnames %in% names(object@groups[object@groups == x]))
                   s <- summary(ism, ..., distanceSummary=distanceSummary)
-                  s$matname <- deparse(substitute(object))
-                  s$blockname <- x
+                  attr(s, "ismname") <- deparse(substitute(object))
+                  attr(s, "blockname") <- x
                   return(s)
                 })
   names(out) <- levels(object@groups)
@@ -91,12 +91,13 @@ summary.BlockedInfinitySparseMatrix <- function(object, ...,
   out$overall <- summary.InfinitySparseMatrix(object, ...,
                                               distanceSummary=distanceSummary)
 
-  out$matname <- list(matname = deparse(substitute(object)),
-                       blocknames = levels(object@groups))
-  out$overall$matname <- out$matname$matname
+  attr(out, "ismname") <- deparse(substitute(object))
+  attr(out, "blocknames") <- levels(object@groups)
 
-  out$flags <- list(printAllBlocks=printAllBlocks,
-                    blockStructure=blockStructure)
+  attr(out$overall, "ismname") <- attr(out, "ismname")
+
+  attr(out, "printAllBlocks") <- printAllBlocks
+  attr(out, "blockStructure") <- blockStructure
 
   class(out) <- "summary.BlockedInfinitySparseMatrix"
   return(out)
@@ -115,7 +116,7 @@ summary.DenseMatrix <- function(object, ..., distanceSummary=TRUE) {
 
   out <- internal.summary.helper(object, mtreat, mcontrol, distances)
 
-  out$matname <- deparse(substitute(object))
+  attr(out, "ismname") <- deparse(substitute(object))
 
   class(out) <- "summary.DenseMatrix"
   out
@@ -177,9 +178,9 @@ print.summary.InfinitySparseMatrix <- function(x, ...) {
       if (numunmatch[i] > 5) {
         cat(", ...\n")
 
-        cat(paste0("See summary(", x$matname, ")",
-                   if (!is.null(x$blockname)) {
-                     paste0("$`", x$blockname, "`")
+        cat(paste0("See summary(", attr(x, "ismname"), ")",
+                   if (!is.null(attr(x, "blockname"))) {
+                     paste0("$`", attr(x, "blockname"), "`")
                    }, "$unmatchable$",
                    names(numunmatch)[i], " for a complete list."))
         }
@@ -201,10 +202,10 @@ print.summary.BlockedInfinitySparseMatrix <- function(x, ...) {
 
   cat("Summary across all blocks:\n")
   print(x$overall, ...)
-  blockentries <- names(x) %in% x$matname$blocknames
+  blockentries <- names(x) %in% attr(x, "blocknames")
 
-  if (!x$flags$printAllBlocks) {
-    if (x$flags$blockStructure) {
+  if (!attr(x, "printAllBlocks")) {
+    if (attr(x, "blockStructure")) {
       cat("Block structure:\n")
       blocksummary <- matrix(unlist(lapply(x[blockentries], "[", "total")),
                              byrow=TRUE, ncol=4)
@@ -212,7 +213,7 @@ print.summary.BlockedInfinitySparseMatrix <- function(x, ...) {
                             sapply(sapply(sapply(x[blockentries], "[", "matchable"), "[", "control"), length),
                             sapply(sapply(sapply(x[blockentries], "[", "unmatchable"), "[", "treatment"), length),
                             sapply(sapply(sapply(x[blockentries], "[", "unmatchable"), "[", "control"), length))
-      rownames(blocksummary) <- paste0("`",x$matname$blocknames,"`")
+      rownames(blocksummary) <- paste0("`",attr(x, "blocknames"),"`")
       colnames(blocksummary) <- c("Matchable Txt",
                                   "Matchable Ctl",
                                   "Unmatchable Txt",
@@ -224,11 +225,11 @@ print.summary.BlockedInfinitySparseMatrix <- function(x, ...) {
 
     cat(paste0("To see summaries for individual blocks,",
                " call for example summary(",
-               x$matname$matname, ")$`",
-               x$matname$blocknames[1], "`.\n"))
+               attr(x, "ismname"), ")$`",
+               attr(x, "blocknames")[1], "`.\n"))
   } else {
     cat("Indiviual blocks:\n\n")
-    for (i in x$matname$blocknames) {
+    for (i in attr(x, "blocknames")) {
       cat(paste0("`",i,"`\n"))
       print(x[[i]])
     }

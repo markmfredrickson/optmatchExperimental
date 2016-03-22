@@ -52,13 +52,15 @@
 summary.InfinitySparseMatrix <- function(object, ..., distanceSummary=TRUE) {
 
   finitedata <- is.finite(object@.Data)
-  mtreat <- 1:dim(object)[1] %in% sort(unique(object@rows[finitedata]))
-  mcontrol  <- 1:dim(object)[2] %in% sort(unique(object@cols[finitedata]))
+  rowsfinite <- object@rows[finitedata]
+  colsfinite <- object@cols[finitedata]
+  datafinite <- object@.Data[finitedata]
 
-  if (distanceSummary & length(object@.Data[finitedata])) {
-    distances <- summary(tapply(object@.Data[finitedata],
-                                object@rows[finitedata],
-                                min))
+  mtreat <- 1:dim(object)[1] %in% sort(unique(rowsfinite))
+  mcontrol  <- 1:dim(object)[2] %in% sort(unique(colsfinite))
+
+  if (distanceSummary & length(datafinite)) {
+    distances <- summary(tapply(datafinite, rowsfinite, min))
   } else {
     distances <- NULL
   }
@@ -81,9 +83,10 @@ summary.BlockedInfinitySparseMatrix <- function(object, ...,
 
   out <- lapply(levels(object@groups),
                 function(x) {
+                  thisgroup <- names(object@groups[object@groups == x])
                   ism <- subset(object,
-                                subset=object@rownames %in% names(object@groups[object@groups == x]),
-                                select=object@colnames %in% names(object@groups[object@groups == x]))
+                                subset=object@rownames %in% thisgroup,
+                                select=object@colnames %in% thisgroup)
                   s <- summary(ism, ..., distanceSummary=distanceSummary)
                   attr(s, "ismname") <- ismname
                   attr(s, "blockname") <- x

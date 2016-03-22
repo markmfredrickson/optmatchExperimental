@@ -30,23 +30,86 @@
 ##           )
 
 
-##' Given a distance matrix which has potentially been calipered,
-##' returns which observations are matchable and unmatchable
+##' Summarize a distance matrix
 ##'
-##' @param object ISM, BISM or DenseMatrix
+##' Given a distance matrix, return information above it, including
+##' dimension, sparsity information, unmatchable members, summary of
+##' finite distances, and, in the case of
+##' \code{BlockedInfinitySparseMatrix}, block structure.
+##'
+##' The output consists of several pieces.
+##'
+##' \itemize{
+##'  \item{Membership: }{Indicates the dimension of the distance.}
+##'
+##'  \item{Total (in)eligible potential matches: }{A measure of the
+##'   sparsity of the distance. Eligible matches have a finite
+##'   distance between treatment and control members; they could be
+##'   matched. Ineligible matches have \code{Inf} distance and can not
+##'   be matched. A higher number of ineligible matches can speed up
+##'   matching, but runs the risk of less optimal overall matching
+##'   results.}
+##'
+##'  \item{Unmatchable treatment/control members: }{If any
+##'   observations have no eligible matches (e.g. their distance to
+##'   every potential match is \code{Inf}) they are listed here. See
+##'   Value below for details of how to access lists of matchable and
+##'   unmatchable treatment and control members.}
+##'
+##'  \item{Summary of minimum matchable distance per treatment member:
+##'   }{To assist with choosing a caliper, this is a numeric summary
+##'   of the smallest distance per matchable treatment member. If you
+##'   provide a caliper that is less than the maximum value, at least
+##'   one treatment member will become unmatchable.}
+##'
+##'  \item{Block structure: }{For \code{BlockedInfinitySparseMatrix},
+##'   a quick summary of the structure of each individual block. (The
+##'   above will all be across all blocks.) This may indicate which
+##'   blocks, if any, are problematic.}
+##' }
+##'
+##' @param object A \code{InfinitySparseMatrix},
+##'   \code{BlockedInfinitySparseMatrix} or \code{DenseMatrix}.
 ##' @param ... Ignored.
-##' @param distanceSummary Default TRUE. Should a summary of minimum
-##'   distance per treatment member be calculated? May be slow on
-##'   larger data sets.
-##' @param printAllBlocks If `object` is a
-##'   BlockedInfinitySparseMatrix, should summaries of all blocks be
-##'   printed alongside the overall summary? Default FALSE.
-##' @param blockStructure If `object` is a BlockedInfinitySparseMatrix
-##'   and `printAllBlocks` is false, print a quick summary of each
-##'   individual block. Default TRUE. If the number of blocks is high,
-##'   consider suppressing this.
-##' @return List of lists, $matchable$control, $matchable$treatment,
-##'   $unmatchable$control andd $unmatchable$treatment
+##' @param distanceSummary Default \code{TRUE}. Should a summary of
+##'   minimum distance per treatment member be calculated? May be slow
+##'   on larger data sets.
+##' @param printAllBlocks If \code{object} is a
+##'   \code{BlockedInfinitySparseMatrix}, should summaries of all
+##'   blocks be printed alongside the overall summary? Default
+##'   \code{FALSE}.
+##' @param blockStructure If \code{object} is a
+##'   \code{BlockedInfinitySparseMatrix} and \code{printAllBlocks} is
+##'   false, print a quick summary of each individual block. Default
+##'   \code{TRUE}. If the number of blocks is high, consider
+##'   suppressing this.
+##' @return A named \code{list}. The summary for an
+##'   \code{InfinitySparseMatrix} or \code{DenseMatrix} contains the
+##'   following:
+##'
+##'   \itemize{
+##'
+##'    \item{\code{total}: }{Contains the total number of treatment
+##'     and control members, as well as eligible and ineligible
+##'     matches.}
+##'
+##'    \item{\code{matchable}: }{The names of all treatment and
+##'     control members with at least one eligible match.}
+##'
+##'    \item{\code{unmatchable}: }{The names of all treatment and
+##'     control members with no eligible matches.}
+##'
+##'    \item{\code{distances}: }{The summary of minimum matchable
+##'     distances, if \code{distanceSummary} is \code{TRUE}.}
+##'
+##'   }
+##'
+##'   For \code{BlockedInfinitySparseMatrix}, the named \code{list}
+##'   instead of contains one entry per block, named after each block
+##'   (i.e. the value of the blocking variable) as well as a block
+##'   named 'overall' which contains the summary ignoring blocks. Each
+##'   of these entries contains a \code{list} with entries 'total',
+##'   'matchable', 'unmatchable' and 'distances', as described above.
 ##' @export
 ##' @name summary.ism
 summary.InfinitySparseMatrix <- function(object, ..., distanceSummary=TRUE) {
@@ -152,18 +215,7 @@ internal.summary.helper <- function(x,
   return(out)
 }
 
-##' Print method for InfinitySparseMatrix, BlockedInfinitySparseMatrix
-##' and DenseMatrix
-##'
-##' @param x Output from a summary call of an InfinitySparseMatrix,
-##'   BlockedInfinitySparseMatrix or DenseMatrix (of class
-##'   summary.infinitysparsematrix,
-##'   summary.blockedinfinitysparsematrix or summary.densematrix
-##'   respectively).
-##' @param ... Additional arguments passed to `print` calls.
-##' @return `x`
 ##' @export
-##' @name print.summary.ism
 print.summary.InfinitySparseMatrix <- function(x, ...) {
   cat(paste("Membership:", x$total$treatment, "treatment,",
             x$total$control, "control\n"))
@@ -203,7 +255,6 @@ print.summary.InfinitySparseMatrix <- function(x, ...) {
 }
 
 ##' @export
-##' @rdname print.summary.ism
 print.summary.BlockedInfinitySparseMatrix <- function(x, ...) {
 
   cat("Summary across all blocks:\n")
@@ -246,7 +297,6 @@ print.summary.BlockedInfinitySparseMatrix <- function(x, ...) {
 }
 
 ##' @export
-##' @rdname print.summary.ism
 print.summary.DenseMatrix <- function(x, ...) {
   print.summary.InfinitySparseMatrix(x, ...)
   return(invisible(x))

@@ -45,12 +45,17 @@ test_that("summary for ISM", {
   m3 <- m2
   m3[1:2] <- Inf
   sm3 <- summary(m3)
-  ##  expect_equal(sm3$total$matchable, 10)
-  ##  expect_equal(sm3$total$unmatchable, 25-10)
-  ##  A bug in num_eligible_matches in optmatch was fixed. Until that
-  ##  gets pushed up so that the newest version of optmatch is
-  ##  installed, the above two tests will fail on `make test`. They
-  ##  should work interactively (with `make load`).
+
+  # The current version of optmatch on CRAN has a bug in
+  # num_eligible_matches. This isn't an issue in general, as using
+  # load.R allows using the most recent version on the
+  # repo. (E.g. works fine in `make interactive` and `make test`.)
+  # However, `make check` starts a fresh version of R which I can't
+  # figure out how to manipulate, so this will fail. So
+  if (compareVersion(as.character(packageVersion("optmatch")), "0.9-5") == 1) {
+    expect_equal(sm3$total$matchable, 10)
+    expect_equal(sm3$total$unmatchable, 25-10)
+  }
   expect_equal(length(sm3$matchable$treatment), 4)
   expect_equal(length(sm3$matchable$control), 4)
   expect_equal(sm3$unmatchable$treatment, "f")

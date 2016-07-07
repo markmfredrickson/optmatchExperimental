@@ -11,19 +11,27 @@
 #'
 #' @title Ordinary least squares for matched differences
 #' @param formula The right hand side should contain an `optmatch` object.
-#' @param data Data that contains the variables in `formula`, missing data will be imputed using `fill.NAs`
-#' @param ms.weights Function of 2 vector args `n.t`, `n.c`, sums of weights from treatment and control group members by matched set, returning vector of matched-set specific weights. `harmonic` returns harmonic means of n.t and n.c; `ett` simply returns n.t.
-#' @param fit.type character string indicating type of fit. For now, only "lm", but may expand to include rlm
+#' @param data Data that contains the variables in `formula`, missing data will be imputed
+#'   using `fill.NAs`
+#' @param ms.weights Function of 2 vector args `n.t`, `n.c`, sums of weights from
+#'   treatment and control group members by matched set, returning vector of matched-set
+#'   specific weights. `harmonic` returns harmonic means of n.t and n.c; `ett` simply
+#'   returns n.t.
+#' @param fit.type character string indicating type of fit. For now, only "lm", but may
+#'   expand to include rlm
 #' @param fit.control optional list of additional arguments to the fitter
 #' @param na.action How NA's are treated. See `model.frame` for details.
-#' @param contrasts.arg An optional list of contrast matrices that will be passed to \code{\link{model.matrix}}.
+#' @param contrasts.arg An optional list of contrast matrices that will be passed to
+#'   \code{\link{model.matrix}}.
 #' @param ... additional arguments passed to `model.frame`
 #' @return object of class `lm`
 #' @export
 #' @author Ben B. Hansen, Mark M. Fredrickson
 #' @import SparseM
 #' @importFrom MASS rlm
-mlm <- function(formula, data, ms.weights = ett, fit.type = "lm", fit.control = list(), na.action = na.pass, contrasts.arg = NULL, ...) {
+mlm <- function(formula, data, ms.weights = ett,
+                fit.type = "lm", fit.control = list(),
+                na.action = na.pass, contrasts.arg = NULL, ...) {
 
   cl <- match.call()
 
@@ -177,8 +185,21 @@ setAs("optmatch", "matrix.csr", function(from) {
       dimension = c(nlevels(from), length(from)))
 })
 
-ett <- function(n.t,n.c) n.t
-harmonic <-  function (n.t, n.c) 2*(1/n.t + 1/n.c)^-1
+#' Mean functions
+#'
+#' @param n.t Sum of treatment weights.
+#' @param n.c Sum of control weights.
+#' @name mlm-weights
+NULL
+#> NULL
+
+#' @export
+#' @rdname mlm-weights
+ett <- function(n.t, n.c) n.t
+
+#' @export
+#' @rdname mlm-weights
+harmonic <- function(n.t, n.c) 2*(1/n.t + 1/n.c)^-1
 
 #' Helper to parse a matched analysis from a formula and a data.frame.
 #'

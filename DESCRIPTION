@@ -10,6 +10,7 @@ License: file LICENSE
 LazyData: true
 Maintainer: Mark M. Fredrickson <mark.m.fredrickson@gmail.com>
 Imports:
+    stats,
     methods,
     SparseM,
     MASS

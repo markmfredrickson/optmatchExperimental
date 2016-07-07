@@ -5,3 +5,7 @@
 *~*
 man/
 inst/doc
+vignettes/figure
+vignettes/*.md
+vignettes/*.R
+vignettes/*.pdf

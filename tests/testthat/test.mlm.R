@@ -16,7 +16,7 @@ test_that("parseMatchingProblem", {
 
   n2 <- cbind(nuclearplants, mmm)
   res <- parseMatchingProblem(cost ~ pr*pt + mmm, n2)
-  
+
   expect_is(res$fmla, "formula")
   expect_is(res$mf, "data.frame")
   expect_is(res$match, "optmatch")
@@ -29,7 +29,7 @@ test_that("parseMatchingProblem", {
   res2 <- parseMatchingProblem(cost ~ pr + mmm, n3)
   expect_equivalent(res2$match, mmm)
   expect_error(parseMatchingProblem(cost ~ pr + mmm + mmm2, n3), "one")
-               
+
   expect_error(parseMatchingProblem(cost ~ pr, n3), "include")
 })
 
@@ -113,7 +113,7 @@ test_that("optmatch -> matrix.csr", {
   expect_true(all(rowSums(csrm) == 0))
 
   expect_equal(as.vector(csr %*% rep(1, length(mmm))), rep(0, nlevels(mmm)))
-  
+
   ### remove only a treated member
   mmm <- fullmatch(pr ~ t1 + t2 + cap, data = nuclearplants)
   mmm <- mmm[!(mmm == levels(mmm)[1] & nuclearplants$pr == 1)]
@@ -142,7 +142,7 @@ test_that("optmatch -> matrix.csr", {
 })
 
 test_that("mlm", {
-  
+
   data(nuclearplants)
   mmm <- fullmatch(pr ~ t1 + t2 + cap, data = nuclearplants)
 
@@ -156,7 +156,7 @@ test_that("mlm", {
   mlm(cost ~ t1 + t2 + mmm, data = n2, ms.weights = harmonic)
 
   expect_true(all(names(coef(mt1t2)) %in% c("(Treatment)", "t1", "t2")))
- 
+
   ppp <- pairmatch(pr ~ t1 + t2 + cap, data = nuclearplants)
   n3 <- cbind(nuclearplants, ppp)
 
@@ -194,7 +194,7 @@ test_that("variances", {
                coef(summary(modell))["pr", ])
 
   expect_equal(vcov(modell)["pr", "pr"], vcov(modelm)[1,1])
-  
+
 })
 
 test_that("model.matrix.mlm", {
@@ -205,7 +205,7 @@ test_that("model.matrix.mlm", {
   mx <- model.matrix(mm)
 
   expect_equal(dim(mx), c(nlevels(ppp), 2))
-  
+
 })
 
 test_that("matches without a treated or control unit", {
@@ -223,3 +223,24 @@ test_that("matches without a treated or control unit", {
   res <- mlm(cost ~ m, data = cbind(nuclearplants, m = mmm))
 })
 
+test_that("#6 mlm with computed variable in formula", {
+
+  data(nuclearplants)
+  mmm <- fullmatch(pr ~ t1 + t2 + cap, data = nuclearplants)
+
+  n2 <- cbind(nuclearplants, mmm)
+
+  m1 <- mlm(cost ~ cap + mmm, data = n2)
+  m2 <- mlm(cost ~ log(cap) + mmm, data = n2)
+  n2$lcap <- log(n2$cap)
+  m3 <- mlm(cost ~ lcap + mmm, data = n2)
+
+  # Different names, same results.
+  expect_false(isTRUE(all.equal(m2$coef, m3$coef)))
+  expect_false(isTRUE(all.equal(m2$coef, m3$coef)))
+  expect_true(isTRUE(all.equal(m2$coef, m3$coef, check.attributes = FALSE)))
+
+  # m1 different
+  expect_false(isTRUE(all.equal(m1$coef, m3$coef, check.attributes = FALSE)))
+
+})

@@ -27,17 +27,25 @@ test_that("ISM indexing", {
   m2@call <- NULL
   expect_equal(m, m2)
 
+  # Warning whenever `drop` is presented.
+  expect_warning(m[1:3, 1:3, drop = TRUE])
+  expect_warning(m[1:3, 1:3, drop = FALSE])
+  expect_warning(m[1:3,, drop = FALSE])
+  expect_warning(m[1:3, drop = FALSE])
+
   # Ignoring drop
-  expect_equal(m[1:3, 2:3, drop = TRUE ], m[1:3, 2:3])
-  expect_equal(m[1:3, 2:3, drop = FALSE], m[1:3, 2:3])
-  expect_equal(m[1:3, , drop = TRUE ], m[1:3, ])
-  expect_equal(m[1:3, , drop = FALSE], m[1:3, ])
-  expect_equal(m[, 1:3, drop = TRUE ], m[, 1:3])
-  expect_equal(m[, 1:3, drop = FALSE], m[, 1:3])
-  expect_equal(m[, , drop = TRUE ], m[, ])
-  expect_equal(m[, , drop = FALSE], m[, ])
-  expect_equal(m[, drop = TRUE ], m[, ])
-  expect_equal(m[, drop = FALSE], m[, ])
-  expect_equal(m[drop = TRUE ], m[])
-  expect_equal(m[drop = FALSE], m[])
+  expect_warning({
+    expect_equal(m[1:3, 2:3, drop = TRUE ], m[1:3, 2:3])
+    expect_equal(m[1:3, 2:3, drop = FALSE], m[1:3, 2:3])
+    expect_equal(m[1:3, , drop = TRUE ], m[1:3, ])
+    expect_equal(m[1:3, , drop = FALSE], m[1:3, ])
+    expect_equal(m[, 1:3, drop = TRUE ], m[, 1:3])
+    expect_equal(m[, 1:3, drop = FALSE], m[, 1:3])
+    expect_equal(m[, , drop = TRUE ], m[, ])
+    expect_equal(m[, , drop = FALSE], m[, ])
+    expect_equal(m[, drop = TRUE ], m[, ])
+    expect_equal(m[, drop = FALSE], m[, ])
+    expect_equal(m[drop = TRUE ], m[])
+    expect_equal(m[drop = FALSE], m[])
+  })
 })

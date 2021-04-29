@@ -9,6 +9,9 @@
 #' @export
 setMethod("[", "InfinitySparseMatrix",
           function(x, i, j =NULL, ..., drop = TRUE) {
+            if ( "drop" %in% names(match.call())) {
+              warning("'drop' argument ignored for InfinitySparseMatrix object subsetting ")
+            }
             # Handles [X] cases
             if (nargs() < 3) {
               if (missing(i)) {
